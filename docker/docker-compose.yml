@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+
+  backend:
+    build:
+      context: ../apps/backend
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "8000:8000"
+    networks:
+      - appnet
+    volumes:
+      - ../apps/backend:/app
+    environment:
+      - DEBUG=1
+
+  frontend:
+    build:
+      context: ../apps/frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "5173:80"
+    networks:
+      - appnet
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: reverse-proxy
+    ports:
+      - "80:80"
+    networks:
+      - appnet
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+      - frontend
+
+networks:
+  appnet:
+    driver: bridge

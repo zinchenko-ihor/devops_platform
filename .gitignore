@@ -9,6 +9,14 @@ dist/
 
 # OS
 .DS_Store
+*.log
 
 # env
 .env
+
+# db
+*.sqlite3
+
+#IDE
+.vscode/
+.idea/
