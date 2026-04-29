@@ -2,7 +2,10 @@ name: DevOps CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
+
+env:
+  DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:
   deploy:
@@ -12,16 +15,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build backend image
-        run: docker build -t backend:latest apps/backend
+      # Login to Docker Hub
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build frontend image
-        run: docker build -t frontend:latest apps/frontend
-
-      - name: Apply Kubernetes manifests
-        run: kubectl apply -f k8s/
-
-      - name: Restart deployments
+      # Build backend
+      - name: Build backend
         run: |
-          kubectl rollout restart deployment/backend -n devops-app
-          kubectl rollout restart deployment/frontend -n devops-app
+          docker build -t $DOCKER_USER/backend:1.0.${{ github.run_number }} apps/backend
+          docker push $DOCKER_USER/backend:1.0.${{ github.run_number }}
+
+      # Build frontend
+      - name: Build frontend
+        run: |
+          docker build -t $DOCKER_USER/frontend:1.0.${{ github.run_number }} apps/frontend
+          docker push $DOCKER_USER/frontend:1.0.${{ github.run_number }}
+
+      # Update Kubernetes images
+      - name: Update deployments
+        run: |
+          kubectl set image deployment/backend backend=$DOCKER_USER/backend:1.0.${{ github.run_number }} -n devops-app
+          kubectl set image deployment/frontend frontend=$DOCKER_USER/frontend:1.0.${{ github.run_number }} -n devops-app

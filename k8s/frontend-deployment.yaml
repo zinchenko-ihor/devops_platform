@@ -15,7 +15,20 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: frontend:latest
+          image: jumper93/frontend:1.0.1
           imagePullPolicy: Never
           ports:
             - containerPort: 80
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 80
+        initialDelaySeconds: 5
+        periodSeconds: 10
+
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 80
+        initialDelaySeconds: 10
+        periodSeconds: 20
