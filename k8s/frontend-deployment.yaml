@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: jumper93/frontend:1.0.1
+          image: jumper93/frontend:1.0.5
           imagePullPolicy: Always
           ports:
             - containerPort: 80

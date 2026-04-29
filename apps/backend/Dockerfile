@@ -24,6 +24,9 @@ COPY . .
 
 # Create non-root user (best practice)
 RUN useradd -m appuser
+
+RUN chown -R appuser:appuser /app
+
 USER appuser
 
 # Expose port

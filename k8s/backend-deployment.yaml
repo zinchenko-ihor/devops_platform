@@ -15,24 +15,28 @@ spec:
     spec:
       containers:
         - name: backend
-          image: jumper93/backend:1.0.1
+          image: jumper93/backend:1.0.5
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
 
           readinessProbe:
             httpGet:
-              path: /api/hello/
+              path: /api/health/
               port: 8000
-            initialDelaySeconds: 5
+            initialDelaySeconds: 15
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
 
           livenessProbe:
             httpGet:
-              path: /api/hello/
+              path: /api/health/
               port: 8000
-            initialDelaySeconds: 10
+            initialDelaySeconds: 40
             periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
 
           env:
             - name: DEBUG
