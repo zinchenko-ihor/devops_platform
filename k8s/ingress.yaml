@@ -5,6 +5,12 @@ metadata:
   namespace: devops-app
 spec:
   ingressClassName: nginx
+
+  tls:
+    - hosts:
+        - dev.local
+      secretName: dev-local-tls
+
   rules:
     - host: dev.local
       http:
