@@ -16,7 +16,7 @@ spec:
       containers:
         - name: backend
           image: jumper93/backend:1.0.1
-          imagePullPolicy: Never
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
 
