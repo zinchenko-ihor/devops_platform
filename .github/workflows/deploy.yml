@@ -1,38 +1,89 @@
-name: DevOps CI/CD
+name: Full CI/CD (Vault + Docker + K3s)
 
 on:
   push:
     branches: ["main"]
 
 env:
-  DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+  VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
 
 jobs:
-  deploy:
+
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
-      # Login to Docker Hub
-      - name: Login to DockerHub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+    # =========================
+    # 1. Checkout
+    # =========================
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      # Build backend
-      - name: Build backend
-        run: |
-          docker build -t $DOCKER_USER/backend:1.0.${{ github.run_number }} apps/backend
-          docker push $DOCKER_USER/backend:1.0.${{ github.run_number }}
+    # =========================
+    # 2. Login to Vault (AppRole)
+    # =========================
+    - name: Login to Vault
+      id: vault
+      run: |
+        TOKEN=$(curl -s --request POST \
+          --data "{\"role_id\":\"${{ secrets.VAULT_ROLE_ID }}\",\"secret_id\":\"${{ secrets.VAULT_SECRET_ID }}\"}" \
+          $VAULT_ADDR/v1/auth/approle/login | jq -r .auth.client_token)
 
-      # Build frontend
-      - name: Build frontend
-        run: |
-          docker build -t $DOCKER_USER/frontend:1.0.${{ github.run_number }} apps/frontend
-          docker push $DOCKER_USER/frontend:1.0.${{ github.run_number }}
+        echo "VAULT_TOKEN=$TOKEN" >> $GITHUB_ENV
 
-      # Update Kubernetes images
-      - name: Update deployments
-        run: |
-          kubectl set image deployment/backend backend=$DOCKER_USER/backend:1.0.${{ github.run_number }} -n devops-app
-          kubectl set image deployment/frontend frontend=$DOCKER_USER/frontend:1.0.${{ github.run_number }} -n devops-app
+    # =========================
+    # 3. Get Docker creds from Vault
+    # =========================
+    - name: Get secrets from Vault
+      run: |
+        curl -s \
+          --header "X-Vault-Token: $VAULT_TOKEN" \
+          $VAULT_ADDR/v1/secret/data/docker > vault.json
+
+        echo "DOCKER_USERNAME=$(jq -r .data.data.username vault.json)" >> $GITHUB_ENV
+        echo "DOCKER_PASSWORD=$(jq -r .data.data.password vault.json)" >> $GITHUB_ENV
+
+    # =========================
+    # 4. Docker login
+    # =========================
+    - name: Docker login
+      run: |
+        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+    # =========================
+    # 5. Build backend
+    # =========================
+    - name: Build backend image
+      run: |
+        docker build -t $DOCKER_USERNAME/backend:1.0.${{ github.run_number }} apps/backend
+        docker push $DOCKER_USERNAME/backend:1.0.${{ github.run_number }}
+
+    # =========================
+    # 6. Build frontend
+    # =========================
+    - name: Build frontend image
+      run: |
+        docker build -t $DOCKER_USERNAME/frontend:1.0.${{ github.run_number }} apps/frontend
+        docker push $DOCKER_USERNAME/frontend:1.0.${{ github.run_number }}
+
+    # =========================
+    # 7. Deploy to Kubernetes (SSH)
+    # =========================
+    - name: Deploy to K8s
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.K8S_HOST }}
+        username: ${{ secrets.K8S_USER }}
+        key: ${{ secrets.K8S_SSH_KEY }}
+        script: |
+          kubectl set image deployment/backend \
+            backend=$DOCKER_USERNAME/backend:1.0.${{ github.run_number }} \
+            -n devops-app
+
+          kubectl set image deployment/frontend \
+            frontend=$DOCKER_USERNAME/frontend:1.0.${{ github.run_number }} \
+            -n devops-app
+
+          kubectl rollout status deployment/backend -n devops-app
+          kubectl rollout status deployment/frontend -n devops-app

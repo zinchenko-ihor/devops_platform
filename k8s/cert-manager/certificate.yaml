@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: dev-local-cert
+  namespace: devops-app
+spec:
+  secretName: dev-local-tls
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - dev.local
+    - grafana.dev.local

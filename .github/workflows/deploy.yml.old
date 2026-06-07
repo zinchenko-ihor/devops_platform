@@ -1,0 +1,38 @@
+name: DevOps CI/CD
+
+on:
+  push:
+    branches: ["main"]
+
+env:
+  DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Login to Docker Hub
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # Build backend
+      - name: Build backend
+        run: |
+          docker build -t $DOCKER_USER/backend:1.0.${{ github.run_number }} apps/backend
+          docker push $DOCKER_USER/backend:1.0.${{ github.run_number }}
+
+      # Build frontend
+      - name: Build frontend
+        run: |
+          docker build -t $DOCKER_USER/frontend:1.0.${{ github.run_number }} apps/frontend
+          docker push $DOCKER_USER/frontend:1.0.${{ github.run_number }}
+
+      # Update Kubernetes images
+      - name: Update deployments
+        run: |
+          kubectl set image deployment/backend backend=$DOCKER_USER/backend:1.0.${{ github.run_number }} -n devops-app
+          kubectl set image deployment/frontend frontend=$DOCKER_USER/frontend:1.0.${{ github.run_number }} -n devops-app
