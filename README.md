@@ -22,7 +22,7 @@ This is a local DevOps platform that demonstrates best practices:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    GitHub Repository                         │
+│                    GitHub Repository                        │
 │  (Webhook on Push → Self-Hosted Runner Activation)          │
 └────────────────────┬────────────────────────────────────────┘
                      │
@@ -45,32 +45,32 @@ This is a local DevOps platform that demonstrates best practices:
                       ▼
     ┌─────────────────────────────────────┐
     │       K3S Kubernetes Cluster        │
-    │  (Local: 192.168.49.240-250)       │
+    │  (Local: 192.168.49.240-250)        │
     │                                     │
-    │  ┌─────────────────────────────┐   │
-    │  │  Namespace: devops-app      │   │
-    │  │                             │   │
-    │  │  ┌────────┐  ┌──────────┐  │   │
-    │  │  │Backend │  │ Frontend │  │   │
-    │  │  │ Django │  │   Vue3   │  │   │
-    │  │  └────────┘  └──────────┘  │   │
-    │  └─────────────────────────────┘   │
+    │  ┌─────────────────────────────┐    │
+    │  │  Namespace: devops-app      │    │
+    │  │                             │    │
+    │  │  ┌────────┐  ┌──────────┐   │    │
+    │  │  │Backend │  │ Frontend │   │    │
+    │  │  │ Django │  │   Vue3   │   │    │
+    │  │  └────────┘  └──────────┘   │    │
+    │  └─────────────────────────────┘    │
     │                                     │
-    │  ┌──────────────┐                  │
-    │  │ MetalLB      │                  │
-    │  │ (Load Balancer)                 │
-    │  └──────────────┘                  │
+    │  ┌──────────────┐                   │
+    │  │ MetalLB      │                   │
+    │  │ (Load Balancer)                  │
+    │  └──────────────┘                   │
     │                                     │
-    │  ┌──────────────┐                  │
-    │  │ NGINX Ingress│ + TLS            │
-    │  └──────────────┘                  │
+    │  ┌──────────────┐                   │
+    │  │ NGINX Ingress│ + TLS             │
+    │  └──────────────┘                   │
     │                                     │
-    │  ┌──────────────────────────────┐  │
-    │  │ Monitoring Stack             │  │
-    │  │ - Grafana (Dashboard)        │  │
-    │  │ - Loki (Log Aggregation)     │  │
-    │  │ - Prometheus (Metrics)       │  │
-    │  └──────────────────────────────┘  │
+    │  ┌──────────────────────────────┐   │
+    │  │ Monitoring Stack             │   │
+    │  │ - Grafana (Dashboard)        │   │
+    │  │ - Loki (Log Aggregation)     │   │
+    │  │ - Prometheus (Metrics)       │   │
+    │  └──────────────────────────────┘   │
     └─────────────────────────────────────┘
            │
            ▼
