@@ -39,7 +39,7 @@ jobs:
       run: |
         curl -s \
           --header "X-Vault-Token: $VAULT_TOKEN" \
-          http://127.0.0.1:8200/v1/secret/data/docker > vault.json
+          http://192.168.0.230:8200/v1/secret/data/docker > vault.json
 
         echo "DOCKER_USERNAME=$(jq -r .data.data.username vault.json)" >> $GITHUB_ENV
         echo "DOCKER_PASSWORD=$(jq -r .data.data.password vault.json)" >> $GITHUB_ENV
